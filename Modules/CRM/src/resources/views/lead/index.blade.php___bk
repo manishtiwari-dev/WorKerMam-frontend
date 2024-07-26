@@ -1,0 +1,396 @@
+<x-app-layout>
+    @section('title', $pageTitle)
+    <div class="card contact-content-body">
+        <div class="card-header">
+            <div class="d-flex align-items-center justify-content-between">
+                <h6 class="tx-15 mg-b-0">{{ __('crm.lead_list') }}</h6>
+                <div class="d-flex gap-1">
+                    @if (\App\Helper\Helper::CheckPermission($pageAccess, 'add') == 'true')
+                        <a href="{{ route('crm.lead.create') }}">
+                            <button class="btn btn-md  btn-primary "><i data-feather="plus"
+                                    class="lead_icon mg-r-5"></i>{{ __('crm.add_lead') }}</button>
+                        </a>
+                    @endif
+                    <a href="#">
+                        <button class="btn btn-md  btn-primary "><i data-feather="plus"
+                                class="lead_icon mg-r-5"></i>{{ __('crm.import_modal') }}</button>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+              <input type="hidden" value="" id="current_source">
+              <!--Filter Start-->
+              <div class="card-header row align-item-center mb-3 p-0  order-list-wrapper">
+               <!--Sub Source Start-->
+                <div class="col-lg-6">
+                    <div class="form-icon position-relative mb-3">
+                        <label>
+                           Agent Name
+                        </label>
+                        
+                        <select class="form-select form-control" name="crmAgent" id="crmAgent" aria-label="Default select example">
+                            @if (!empty($content->crmagentlist))
+                                @foreach ($content->crmagentlist as $crmagentlist)
+                                    <option value="{{ $crmagentlist->agent_id }}">
+                                        {{ $crmagentlist->agent_name }}
+                                    </option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
+                </div>
+                <!--Sub Source End-->
+                 <!--Approval Status Start-->
+                <div class="col-lg-6">
+                    <div class="form-icon position-relative  mb-3">
+                        <label>
+                           Category
+                        </label>
+                        {{-- @dd($content) --}}
+                        <select class="form-select form-control category" id="category" aria-label="Default select example" name="category">
+                            <option selected value="">Select category</option>                            
+                            @if (!empty($content->crmindustrylist))
+                                @foreach ($content->crmindustrylist as $industry)
+                                    <option value="{{ $industry->industry_id }}">
+                                        {{ $industry->industry_name }}
+                                    </option>
+                                @endforeach
+                            @endif                          
+                        </select>
+                    </div>
+                </div>
+                <!--Approval Status End-->
+                                
+                <!--Search Start-->
+                <div class="col-lg-6 mb-3 mb-lg-0 mb-md-0">
+                    <label>Search</label>
+                   <input type="text" id="searchbar" value="{{ $search ?? '' }}" class="form-control fas fa-search"
+                                    placeholder="Search..." aria-label="Search" name="search">
+                </div>
+                <!--Search End-->
+                  <!--Date Start-->
+                <div class="col-lg-6">
+                    <div class="form-icon position-relative  mb-3 ">
+                        <label>
+                            {{ __('seo.date') }}
+                        </label>
+                        <input type="text" id="datatableRange" name="datatableRange" class="form-control"
+                            placeholder="{{ __('common.daterange_placeholder') }}" />
+                    </div>
+                </div>
+                <!--Date End-->
+               
+
+                <div class="col-lg-2 d-flex">
+                    <div class="align-items-center reset-btn">
+                        <a class="btn btn-primary " href=""
+                            role="button"><i class="fa fa-refresh" aria-hidden="true"></i>   {{ __('common.reset') }}</a>
+                    </div>
+                </div>
+                
+            </div>
+            <!--Filter End-->
+            <div class="table-responsive" id="client_listing">
+                <table class="table border table_wrapper" id="lead_listing">
+                    <thead>
+                        <tr>
+                            <th>{{ __('common.sl_no') }}</th>
+                            <th>{{ __('crm.client_details') }}</th>
+                            <th class="text-center">{{ __('crm.agent') }}</th>
+                            <th>{{ __('crm.tags') }}</th>
+                            <th>{{ __('crm.category') }}</th>
+                            <th>{{ __('crm.status') }}</th>
+                            <th class="text-center wd-10p">{{ __('common.action') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody id="Search_Tr">
+                        @if (!empty($content->crmleadlist))
+                            @foreach ($content->crmleadlist as $key => $crmlead)
+                                <tr>
+                                    <td>{{$content->current_page * $content->per_page + $key+1 - $content->per_page}}</td>
+                                   
+                                    <td>
+                                        <h6 class="tx-semibold mg-b-0"><a
+                                                href="{{ route('crm.lead-followup.show', [$crmlead->lead_id]) }}">{{ $crmlead->contact_name }}</a>
+                                        </h6>
+                                        <span class="tx-color-03">{{ $crmlead->contact_email ?? '' }}</span><br />
+                                    </td>
+
+                                    <td>
+                                        {{-- {{$crmlead->agent_details->crm_lead_agent->agent_name ?? '-'}} --}}
+
+                                        <select class="form-select form-control agent_name" id="agent_name"
+                                            name="agent" data-lead="{{ $crmlead->lead_id }}" required>
+                                            <option selected disable value="" disabled>{{ __('crm.agent') }}
+                                            </option>
+
+                                            @if (!empty($content->crmagentlist))
+                                                @foreach ($content->crmagentlist as $crmagentlist)
+                                                    <option value="{{ $crmagentlist->agent_id }}"
+                                                        {{ $crmlead->agent_id == $crmagentlist->agent_id ? 'selected' : '' }}>
+                                                        {{ $crmagentlist->agent_name }}</option>
+                                                @endforeach
+                                            @endif
+                                        </select>
+                                    </td>
+                                    <td>
+                                        
+                                        @if($crmlead->lead_tags != null)
+                                            @foreach($crmlead->lead_tags as $tags) 
+                                            <span class="badge" style="background-color: {{$tags->tags_color ?? ''}};">{{$tags->tags_name ?? ''}}</span>
+                                            @endforeach
+                                        @endif
+                                    </td>
+                                    @dd($crmlead)
+                                    <td>{{ $crmlead->agent_details->crm_lead_industry->industry_name ?? '-' }}</td>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input lead_toggle_class"
+                                                {{ $crmlead->status == '1' ? 'checked' : '' }}
+                                                data-id="{{ $crmlead->lead_id }}"
+                                                id="customSwitch{{ $crmlead->lead_id }}">
+                                            <label class="custom-control-label"
+                                                for="customSwitch{{ $crmlead->lead_id }}"></label>
+                                        </div>
+
+
+                                    </td>
+                                    <td class="d-flex align-items-center float-right">
+
+                                        <a href="{{ route('crm.lead-followup.show', [$crmlead->lead_id]) }}"
+                                            class="btn btn-sm btn-white d-flex align-items-center mg-r-5"><i
+                                                data-feather="eye"></i></a>
+                                        <a href="{{ route('crm.lead.edit', $crmlead->lead_id) }}"
+                                            class="btn btn-sm btn-white d-flex align-items-center mg-r-5"><i
+                                                data-feather="edit-2"></i> </a>
+
+                                        <a href=" "
+                                            class="btn btn-sm btn-white d-flex align-items-center mg-r-5"><i
+                                                data-feather="mail"></i></a>
+
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @endif
+                    </tbody>
+                </table>
+                  {!! \App\Helper\Helper::make_pagination(
+                $content->total_records,
+                $content->per_page,
+                $content->current_page,
+                $content->total_page,
+                'crm.lead.index',['start_date'=>$content->start_date,'end_date'=>$content->end_date]
+            ) !!}
+            </div>
+            
+        </div>
+    </div>
+
+    <!--Client delete modal start here-->
+    <div class="modal fade effect-scale" id="delete_modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title">Delete Lead</h6>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="deleteClient" name="input_field_id">
+                    <p class="mg-b-0">{{ __('common.delete_confirmation') }}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        {{ __('common.no') }}
+                    </button>
+                    <button type="button" class="btn btn-primary deleteConfirmBtn">{{ __('common.yes') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--Client delete modal end here-->
+
+    @push('scripts')
+     <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js" defer></script>
+        <script>
+            $('.lead_toggle_class').change(function() {
+                let status = $(this).prop('checked') === true ? 1 : 0;
+                let status_id = $(this).data('id');
+                console.log(status_id);
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                $.ajax({
+                    type: "POST",
+                    dataType: "json",
+                    url: "{{ url('crm/lead-status') }}",
+                    data: {
+                        'status': status,
+                        'status_id': status_id
+                    },
+                    success: function(response) {
+                        // console.log(response);
+                        Toaster('success', response.success);
+                    }
+                });
+            });
+
+
+            $(document).ready(function() {
+
+                $(document).on("click", "#deleteBtn", function() {
+                    var client_id = $(this).attr("data-id");
+                    $('#deleteClient').val(client_id);
+                });
+                $(document).on('click', '.deleteConfirmBtn', function() {
+                    var client_id = $('#deleteClient').val();
+
+                    $.ajaxSetup({
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        }
+                    });
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ url('crm/clients') }}/" + client_id,
+                        data: {
+                            client_id: client_id,
+                            _method: 'DELETE'
+                        },
+                        dataType: "json",
+                        success: function(response) {
+                            Toaster(response.success);
+
+                        }
+                    });
+
+                });
+            });
+
+
+            $('.agent_name').change(function() {
+
+                let value = $(this).val();
+                let lead_id = $(this).data("lead"); 
+
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                $.ajax({
+                    type: "POST",
+                    dataType: "json",
+                    url: "{{ url('crm/agent-update') }}",
+                    data: {
+                        'value': value,
+                        'lead_id': lead_id,
+                    },
+                    success: function(response) {
+                        Toaster('success', response.success);
+                    }
+                });
+            });
+
+
+             $(function() {
+                // tableWebContent();
+                var start = moment();
+                var end = moment();
+
+                function cb(start, end) {
+                    $('#datatableRange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+                }
+
+                $('#datatableRange').daterangepicker({
+                    autoUpdateInput: false,
+                    startDate: start,
+                    endDate: end,
+                    ranges: {
+                        'Today': [moment(), moment()],
+                        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                        'This Month': [moment().startOf('month'), moment().endOf('month')],
+                        'Last 6 Month': [moment().subtract(6, 'month'), moment()],
+                        'Last Year': [moment().subtract(1, 'year'), moment()]
+                    },
+                    locale: {
+                        format: 'YYYY-MM-D'
+                    }
+                }, cb);
+
+                cb(start, end);
+            });
+
+             $(document).ready(function() {
+                $('input[name="datatableRange"]').on('apply.daterangepicker', function(ev, picker) {
+                    $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
+                    ajaxSubmitData();
+                });
+
+                $("#searchbar").on('keyup', function(e) {
+                   
+                    tableWebContent('','',this.value,'');
+                });
+
+                $("#category").on('change' ,function (e) {
+                    tableWebContent('','','',this.value);
+                  })
+
+            });
+
+            function ajaxSubmitData() {
+                var dateRangePicker = $('#datatableRange').data('daterangepicker');
+                var startDate = $('#datatableRange').val();
+        
+                if (startDate == '') {
+                    startDate = null;
+                    endDate = null;
+                } else {
+                    startDate = dateRangePicker.startDate.format('YYYY-MM-DD');
+                    endDate = dateRangePicker.endDate.format('YYYY-MM-DD');
+                }
+
+                if (startDate != ''  && endDate != '')
+                    $("#customer_listing").html('');
+
+                $("#customer_listing").html('');
+                tableWebContent(startDate, endDate);
+            }
+
+            function tableWebContent(startDate='', endDate='',search='' ,category='') {
+             
+                const url = "{{route('crm.lead-filter')}}";
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                $.ajax({
+                    url: url,
+                    type: "GET",
+                    data: {
+                        start_date: startDate,
+                        end_date: endDate,
+                        search:search,
+                        category:category,
+                    },
+                    dataType: "json",
+                    success: function(result) {
+                        $("#lead_listing").html(result.html);
+                    }
+                });
+            }
+        </script>
+    @endpush
+</x-app-layout>

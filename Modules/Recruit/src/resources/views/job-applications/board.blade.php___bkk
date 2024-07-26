@@ -1,0 +1,1030 @@
+<x-app-layout>
+
+
+    @push('scripts')
+        <link rel="stylesheet" href="{{ asset('assets/plugins/jQueryUI/jquery-ui.min.css') }}">
+        <link rel="stylesheet" href="{{ asset('assets/lobipanel/dist/css/lobipanel.min.css') }}">
+        <link rel="stylesheet" href="{{ asset('assets/node_modules/bootstrap-datepicker/bootstrap-datepicker.min.css') }}">
+        <link rel="stylesheet" href="{{ asset('asset/css/lobipanel.min.css') }}">
+        <link rel="stylesheet" href="{{ asset('assets/node_modules/multiselect/css/multi-select.css') }}">
+        <link rel="stylesheet"
+            href="{{ asset('assets/plugins/jquery-bar-rating-master/dist/themes/fontawesome-stars.css') }}">
+        <link rel="stylesheet" href="{{ asset('asset/css/bootstrap-material-datetimepicker.css') }}">
+        <link rel="stylesheet" href="{{ asset('asset/css/bootstrap-colorpicker.min.css') }}">
+    @endpush
+
+    <style>
+        .board-column {
+            /* max-width: 21%; */
+        }
+
+        .board-column .card {
+            box-shadow: none;
+        }
+
+        .notify-button {
+            /*width: 9em;*/
+            height: 1.5em;
+            font-size: 0.730rem !important;
+            line-height: 0.5 !important;
+        }
+
+        .panel-scroll {
+            height: calc(100vh - 330px);
+            overflow-y: scroll
+        }
+
+        .mb-20 {
+            margin-bottom: 20px
+        }
+
+        .datepicker {
+            z-index: 9999 !important;
+        }
+
+        .d-block {
+            display: block;
+        }
+
+        .upcomingdata {
+            height: 37.5rem;
+            overflow-x: scroll;
+        }
+
+        .notify-button {
+            height: 1.5em;
+            font-size: 0.730rem !important;
+            line-height: 0.5 !important;
+        }
+
+        .scheduleul {
+            padding: 0 15px 0 11px;
+        }
+
+        .searchInput {
+            width: 50%;
+            display: inline
+        }
+
+        .searchButton {
+            margin-bottom: 4px;
+            margin-left: 3px;
+        }
+    </style>
+
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <a href="javascript:;" id="toggle-filter" class="btn btn-outline btn-success btn-sm toggle-filter">
+                <i class="fa fa-sliders"></i> @lang('app.filterResults')
+            </a>
+            <a href="{{ route('recruit.job-applications.table') }}" class="btn btn-sm btn-primary">
+                <i class="fa fa-table"></i> @lang('app.tableView')
+            </a>
+            {{-- <a href="#" class="btn btn-sm btn-info mail_setting">
+                <i class="fa fa-envelope-o"></i>
+                @lang('modules.applicationSetting.mailSettings')
+            </a> --}}
+            {{-- <a href="javascript:createApplicationStatus();" class="btn btn-sm btn-success">
+                <i class="fa fa-bookmark-o"></i>
+                @lang('modules.jobApplication.newStatus')
+            </a> --}}
+        </div>
+        <div class="col-sm-6">
+            <div id="search-container" class="form-group pull-right">
+                <input id="search" class="form-control" type="text" name="search"
+                    placeholder="@lang('modules.jobApplication.enterName')">
+                <a href="javascript:;" class="d-none">
+                    <i class="fa fa-times-circle-o"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-scroll">
+        <div class="card" id="ticket-filters">
+            <div class="card-header">
+                <div class="d-flex align-items-center justify-content-between ">
+                    <h6 class="tx-15 mg-b-0">@lang('modules.AddJobApplication') </h6>
+                    <a href="{{ route('recruit.job-applications.create') }}"
+                        class="btn btn-sm btn-bg d-flex align-items-center mg-r-5"><i data-feather="plus"></i><span
+                            class="d-none d-sm-inline mg-l-5"> @lang('modules.AddJobApplication')</span></a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <div class="input-daterange input-group">
+                                <input type="text" class="form-control" id="date-start"
+                                    @if ($type == '') value="{{ $startDate }}" @endif
+                                    name="start_date">
+                                <span class="input-group-addon bg-info b-0 text-white p-1">@lang('app.to')</span>
+                                <input type="text" class="form-control" id="date-end" name="end_date"
+                                    @if ($type == '') value="{{ $endDate }}" @endif>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <select class="select2" name="jobs" id="jobs" data-style="form-control">
+                                <option value="all">@lang('modules.jobApplication.allJobs')</option>
+                                @forelse($jobs as $job)
+                                    <option title="{{ ucfirst($job->title) }}" value="{{ $job->id }}">
+                                        {{ ucfirst($job->title) }}</option>
+                                @empty
+                                @endforelse
+
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <select class="select2" name="location" id="location" data-style="form-control">
+                                <option value="all">@lang('modules.jobApplication.allLocation')</option>
+                                @forelse($locations as $location)
+                                    <option value="{{ $location->id }}">{{ ucfirst($location->location) }}</option>
+                                @empty
+                                @endforelse
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <select class="select2" name="skill[]" data-placeholder="Select Skills" multiple="multiple"
+                                id="skill" data-style="form-control">
+
+                                @forelse($skills as $skill)
+                                    <option value="{{ $skill->id }}">{{ ucfirst($skill->name) }}</option>
+                                @empty
+                                @endforelse
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <select class="select2" name="question" id="questions" data-style="form-control">
+                                <option value="all">@lang('modules.jobApplication.allQuestion')</option>
+                                @forelse($questions as $question)
+                                    <option value="{{ $question->id }}">{{ ucfirst($question->question) }}</option>
+                                @empty
+                                @endforelse
+
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4" id="question_value">
+                        <div class="form-group">
+                            <input type="text" class="form-control" name="question_value" id="question-value"
+                                placeholder="Enter question value">
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <button type="button" id="apply-filters"
+                                class="btn btn-primary btn-sm">@lang('app.apply')</button>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row container-row">
+            @foreach ($boardColumns as $key => $column)
+                <div id="task{{ $column->status }}" class="board-column  p-0" data-column-id="{{ $column->id }}"
+                    data-position="{{ $column->position }}">
+                    <div class="card" style="margin-bottom:0 !important;">
+                        <div class="card-body">
+                            <h4 class="card-title pt-1 pb-1">
+                                {{ ucwords($column->status) }}
+                                <span class="badge badge-pill badge-primary text-white ml-auto"
+                                    style="background: {{ $column->color }};" id="columnCount_{{ $column->id }}">
+                                    {{ count($column->applications) }}
+                                </span>
+                                <span class="pull-right">
+                                    <a data-toggle="dropdown" href="#">
+                                        <i class="fa fa-ellipsis-h"></i>
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="javascript:editStatus({{ $column->id }});">
+                                            <i class="fa fa-edit"></i> @lang('app.edit')
+                                        </a>
+                                        @if ($column->id > 5)
+                                            <a class="dropdown-item"
+                                                href="javascript:deleteStatus({{ $column->id }});">
+                                                <i class="fa fa-trash-o"></i> @lang('app.delete')
+                                            </a>
+                                        @endif
+                                    </div>
+                                </span>
+                            </h4>
+                            <div class="card-text">
+                                <div class="panel-body">
+                                    <div class="row">
+                                        <div class="custom-column panel-scroll" data-column-id="{{ $column->id }}"
+                                            id="drag-container-{{ $column->id }}">
+                                            @foreach ($column->applications as $application)
+                                                <div id="task-card{{ $application->id }}"
+                                                    class="panel panel-default lobipanel show-detail task-card"
+                                                    data-widget="control-sidebar" data-slide="true"
+                                                    data-row-id="{{ $application->id }}"
+                                                    data-column-id="{{ $column->id }}"
+                                                    data-application-id="{{ $application->id }}" data-sortable="true"
+                                                    style="border-color: {{ $column->color }};">
+                                                    <div class="panel-body ui-sortable-handle">
+                                                        <h5>
+                                                            <img src="{{ $application->photo_url }}" alt="user"
+                                                                class="img-circle" width="25">
+                                                            {{ ucwords($application->full_name) }}
+                                                        </h5>
+                                                        <div class="stars stars-example-fontawesome">
+                                                            {{-- <select id="example-fontawesome_{{ $application->id }}"
+                                                                data-value="{{ $application->rating }}"
+                                                                data-id="{{ $application->id }}"
+                                                                class="example-fontawesome bar-rating" name="rating"
+                                                                autocomplete="off">
+                                                                <option value=""></option>
+                                                                <option value="1">1</option>
+                                                                <option value="2">2</option>
+                                                                <option value="3">3</option>
+                                                                <option value="4">4</option>
+                                                                <option value="5">5</option>
+                                                            </select> --}}
+                                                        </div>
+                                                        {{-- @dd($boardColumns) --}}
+                                                        <h6 class="text-muted"></h6>
+                                                        <div class="pt-2 pb-2 mt-3">
+
+                                                            <span class="text-dark font-14">
+                                                                @if (!is_null($application->schedule) && $column->id == 3)
+                                                                    {{ \Carbon\Carbon::parse($application->schedule->schedule_date)->format('m/d/Y') }}
+                                                                @else
+                                                                    {{ \Carbon\Carbon::parse($application->created_at)->format('m/d/Y') }}
+                                                                @endif
+                                                            </span>
+
+                                                            {{-- <span
+                                                                id="buttonBox{{ $column->id }}{{ $application->id }}"
+                                                                data-timestamp=""> --}}
+
+                                                            @if (!is_null($application->schedule) && $column->id == 3)
+                                                                <button
+                                                                    onclick="sendReminder({{ $application->id }}, 'reminder')"
+                                                                    type="button"
+                                                                    class="btn btn-sm btn-info notify-button">@lang('app.reminder')</button>
+                                                            @endif
+                                                            @if (in_array($column->status, ['hired', 'rejected']))
+                                                                <button
+                                                                    onclick="sendReminder({{ $application->id }}, 'notify', '{{ $column->status }}')"
+                                                                    type="button"
+                                                                    class="btn btn-sm btn-info notify-button">@lang('app.notify')</button>
+                                                            @endif
+                                                            {{-- </span> --}}
+                                                        </div>
+
+                                                    </div>
+
+                                                </div>
+                                            @endforeach
+                                            {{-- <div id="loadMoreData-{{ $column->id }}">
+    
+                                        </div> --}}
+
+                                            <div class="panel panel-default lobipanel" data-sortable="true"></div>
+                                            {{-- <div id="loadMoreBox{{ $column->id }}"> --}}
+
+
+                                            @if ($column->application_count > count($column->applications))
+                                                <!-- TASK BOARD FOOTER START -->
+
+                                                <div class="d-flex m-3 justify-content-center"
+                                                    id="loadMoreBox{{ $column->id }}">
+                                                    <a class="f-13 text-dark-grey f-w-500 load-more-application"
+                                                        data-column-id="{{ $column->id }}"
+                                                        data-total-tasks="{{ $column->application_count }}"
+                                                        href="javascript:;">@lang('app.loadmore')</a>
+                                                </div>
+                                                {{-- </div> --}}
+                                                <!-- TASK BOARD FOOTER END -->
+                                            @endif
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+    @include('Recruit::application-setting.modal')
+
+    {{-- Ajax Modal Start for --}}
+    <div class="modal fade bs-modal-md in" id="scheduleDetailModal" role="dialog" aria-labelledby="myModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg" id="modal-data-application">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
+                    <span class="caption-subject font-red-sunglo bold uppercase" id="modelHeading"></span>
+                </div>
+                <div class="modal-body">
+                    Loading...
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn blue">Save changes</button>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    {{-- Ajax Modal Ends --}}
+
+
+    @push('scripts')
+        <script src="{{ asset('asset/js/moment.js') }}" type="text/javascript"></script>
+
+        <script src="{{ asset('asset/js/bootstrap-colorpicker.min.js') }}"></script>
+        <script src="{{ asset('asset/js/lobipanel.min.js') }}"></script>
+
+        <script>
+            $(function() {
+                $('#date-start').datepicker({
+                    dateFormat: 'dd-mm-yy',
+                    onSelect: function() {
+                        var selected = $(this).datepicker("getDate");
+                    }
+                });
+
+            });
+            $(function() {
+                $('#date-end').datepicker({
+                    dateFormat: 'dd-mm-yy',
+                    onSelect: function() {
+                        var selected = $(this).datepicker("getDate");
+                    }
+                });
+
+            });
+
+
+            $(".select2").select2({
+                width: '100%'
+            });
+            //implementation of load more functionality
+
+            loadData();
+
+            $('body').on('click', '.load-more-application', function() {
+                var columnId = $(this).data('column-id');
+                var totalTasks = $(this).data('total-tasks');
+                var currentTotalTasks = $('#drag-container-' + columnId + ' .task-card').length;
+                var lastelement = $('#drag-container-' + columnId + ' div.task-card:last');
+
+                var startDate = $('#date-start').val();
+                var jobs = $('#jobs').val();
+                var location = $('#location').val();
+                var skill = $('#skill').val();
+                var questions = $('#questions').val();
+                var search = $('#search').val();
+                var question_value = $('#question-value').val();
+
+                if (startDate == '') {
+                    startDate = null;
+                }
+
+                var endDate = $('#date-end').val();
+
+                if (endDate == '') {
+                    endDate = null;
+                }
+
+                var url = '{{ route('recruit.job-applications.loadMore') }}?startDate=' + startDate + '&endDate=' +
+                    endDate + '&jobs=' + jobs + '&search=' + search + '&location=' +
+                    location + '&skill=' + skill + '&questions=' + questions + '&question_value=' + question_value +
+                    '&columnId=' + columnId + '&currentTotalRecords=' + currentTotalTasks +
+                    '&totalRecord=' + totalTasks;
+
+                $.ajax({
+                    url: url,
+                    container: '#drag-container-' + columnId,
+                    blockUI: true,
+                    type: "GET",
+                    success: function(response) {
+                        lastelement.after(response.view);
+
+                        if (response.load_more == 'show') {
+                            $('#loadMoreBox' + columnId).show();
+
+                        } else {
+                            $('#loadMoreBox' + columnId).remove();
+                        }
+
+                        $("body").tooltip({
+                            selector: '[data-toggle="tooltip"]'
+                        });
+
+                        $('.example-fontawesome').barrating({
+                            theme: 'fontawesome-stars',
+                            showSelectedRating: false,
+                            readonly: true,
+
+                        });
+
+                        $(function() {
+                            $('.bar-rating').each(function() {
+                                const val = $(this).data('value');
+
+                                $(this).barrating('set', val ? val : '');
+                            });
+                        });
+
+                        var oldParentId, currentParentId, oldElementIds = [],
+                            i = 1;
+
+                        let draggingTaskId = 0;
+                        let draggedTaskId = 0;
+                        let missingElementId = 0;
+                        let currentApplicationId = 0;
+
+                        $('.lobipanel').on('dragged.lobiPanel', function(e, lobiPanel) {
+                            var $parent = $(this).parent(),
+                                $children = $parent.children('.show-detail');
+                            var pr = $(this).closest('.board-column');
+
+                            if (draggingTaskId !== 0) {
+                                oldParentId = pr.data('column-id');
+                            }
+                            currentParentId = pr.data('column-id');
+
+                            var boardColumnIds = [];
+                            var applicationIds = [];
+                            var prioritys = [];
+
+                            $children.each(function(ind, el) {
+                                boardColumnIds.push($(el).closest('.board-column').data(
+                                    'column-id'));
+                                applicationIds.push($(el).data('application-id'));
+                                prioritys.push($(el).index());
+                            });
+
+                            if (draggingTaskId !== 0) {
+                                boardStracture[oldParentId] = [...applicationIds,
+                                    currentApplicationId
+                                ];
+                            } else {
+                                const result = boardStracture[oldParentId].filter(el => el !==
+                                    currentApplicationId);
+                                boardStracture[oldParentId] = result;
+                                boardStracture[currentParentId] = applicationIds;
+                            }
+
+                            if (oldParentId == 3 && currentParentId == 4) {
+                                $('#buttonBox' + oldParentId + currentApplicationId).show();
+                                var button = '<button onclick="sendReminder(' +
+                                    currentApplicationId +
+                                    ', \'notify\')" type="button" class="btn btn-sm btn-info notify-button">@lang('app.notify')</button>';
+                                $('#buttonBox' + oldParentId + currentApplicationId).html(button);
+                                $('#buttonBox' + oldParentId + currentApplicationId).attr('id',
+                                    'buttonBox' + currentParentId + currentApplicationId);
+
+                            } else if (oldParentId == 4 && currentParentId == 3) {
+                                var timeStamp = $('#buttonBox' + oldParentId + currentApplicationId)
+                                    .data('timestamp');
+                                var currentDate = '';
+                                // if (currentDate < timeStamp) {
+                                $('#buttonBox' + oldParentId + currentApplicationId).show();
+                                var button = '<button onclick="sendReminder(' +
+                                    currentApplicationId +
+                                    ', \'reminder\')" type="button" class="btn btn-sm btn-info notify-button">@lang('app.reminder')</button>';
+                                $('#buttonBox' + oldParentId + currentApplicationId).html(
+                                    button);
+                                // }
+                                $('#buttonBox' + oldParentId + currentApplicationId).attr('id',
+                                    'buttonBox' + currentParentId + currentApplicationId);
+                            } else {
+                                $('#buttonBox' + oldParentId + currentApplicationId).hide();
+                                $('#buttonBox' + oldParentId + currentApplicationId).attr('id',
+                                    'buttonBox' + currentParentId + currentApplicationId);
+                            }
+
+                            var startDate = $('#date-start').val();
+                            var jobs = $('#jobs').val();
+                            var search = $('#search').val();
+
+                            if (startDate == '') {
+                                startDate = null;
+                            }
+
+                            var endDate = $('#date-end').val();
+
+                            if (endDate == '') {
+                                endDate = null;
+                            }
+                            // update values for all tasks
+                            $.ajax({
+                                url: '{{ route('recruit.job-applications.updateIndex') }}',
+                                type: 'POST',
+                                container: '.container-row',
+                                data: {
+                                    boardColumnIds: boardColumnIds,
+                                    applicationIds: applicationIds,
+                                    prioritys: prioritys,
+                                    startDate: startDate,
+                                    jobs: jobs,
+                                    search: search,
+                                    endDate: endDate,
+                                    draggingTaskId: draggingTaskId,
+                                    draggedTaskId: draggedTaskId,
+                                    '_token': '{{ csrf_token() }}'
+                                },
+                                success: function(response) {
+                                    if (draggedTaskId !== 0) {
+                                        $.each(response.columnCountByIds, function(key,
+                                            value) {
+                                            $('#columnCount_' + value.id).html((
+                                                value.status_count));
+                                            $('#columnCount_' + value.id)
+                                                .parents('.board-column').find(
+                                                    '.lobipanel').css(
+                                                    'border-color', value.color
+                                                );
+                                        });
+                                    }
+                                    Toaster('Success ');
+                                }
+                            });
+                            if (draggingTaskId !== 0) {
+                                draggedTaskId = draggingTaskId;
+                                draggingTaskId = 0;
+                            }
+                        }).lobiPanel({
+                            sortable: true,
+                            reload: false,
+                            editTitle: false,
+                            close: false,
+                            minimize: false,
+                            unpin: false,
+                            expand: false,
+                        });
+
+                        var isDragging = 0;
+                        $('.lobipanel-parent-sortable').on('sortactivate', function() {
+                            $('.board-column > .panel-body').css('overflow-y', 'unset');
+                            isDragging = 1;
+                        });
+                        $('.lobipanel-parent-sortable').on('sortstop', function(e) {
+                            $('.board-column > .panel-body').css('overflow-y', 'auto');
+                            isDragging = 0;
+                        });
+
+                        $('.show-detail').click(function(event) {
+                            if ($(event.target).hasClass('notify-button')) {
+                                return false;
+                            }
+                            var id = $(this).data('application-id');
+                            draggingTaskId = currentApplicationId = id;
+
+                            if (isDragging == 0) {
+                                $(".right-sidebar").slideDown(50).addClass("shw-rside");
+
+                                var url = "{{ route('recruit.job-applications.show', ':id') }}";
+                                url = url.replace(':id', id);
+
+                                $.ajax({
+                                    type: 'GET',
+                                    url: url,
+                                    success: function(response) {
+                                        if (response.status == "success") {
+                                            $('#right-sidebar-content').html(response
+                                                .view);
+                                        }
+                                    }
+                                });
+                            }
+                        })
+                    }
+                });
+            });
+
+            //filters
+            $('#apply-filters').click(function() {
+                loadData();
+            });
+
+            //reset filters
+            $('#reset-filters').click(function() {
+                $('#date-start').val();
+                $('#date-end').val('');
+                $('#jobs').val('all').trigger('change');
+
+                loadData();
+            })
+
+            //apply search
+            $('#applySearch').click(function() {
+                var search = $('#search').val();
+                if (search !== undefined && search !== null && search !== "") {
+                    loadData();
+                }
+            })
+
+            // $('#date-end').bootstrapMaterialDatePicker({
+            //     weekStart: 0,
+            //     time: false
+            // });
+            // $('#date-start').bootstrapMaterialDatePicker({
+            //     weekStart: 0,
+            //     time: false
+            // }).on('change', function(e, date) {
+            //     $('#date-end').bootstrapMaterialDatePicker('setMinDate', date);
+            // });
+
+            // Schedule create modal view
+            function createSchedule(id) {
+                var url = "{{ route('recruit.job-applications.create-schedule', ':id') }}";
+                url = url.replace(':id', id);
+                $('#modelHeading').html('Schedule');
+                $.ajaxModal('#scheduleDetailModal', url);
+            }
+
+            // Create application status modal view
+            function createApplicationStatus() {
+                var url = "";
+
+                $('#modelHeading').html('Application Status');
+                $.ajaxModal('#scheduleDetailModal', url);
+            }
+
+            function deleteStatus(id) {
+                const panels = $('.board-column[data-column-id="' + id + '"').find('.lobipanel.show-detail');
+                let applicationIds = [];
+                panels.each((ind, element) => {
+                    applicationIds.push($(element).data('application-id'));
+                });
+
+                swal({
+                        title: `@lang('errors.areYouSure')`,
+                        text: "@lang('errors.deleteStatusWarning')",
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                    })
+                    .then((isConfirm) => {
+
+                        if (isConfirm) {
+                            let url = "";
+
+                            let data = {
+                                _token: '{{ csrf_token() }}',
+                                _method: 'DELETE',
+                                applicationIds: applicationIds
+                            }
+
+                            $.ajax({
+                                url,
+                                data,
+                                type: 'POST',
+                                container: '.container-row',
+                                success: function(response) {
+                                    if (response.status == 'success') {
+                                        loadData();
+                                    }
+                                }
+                            })
+                        }
+                    });
+            }
+
+            function editStatus(id) {
+                var url = "{{ route('recruit.application-status.edit', ':id') }}";
+                url = url.replace(':id', id);
+
+                $('#modelHeading').html('Application Status');
+                $.ajaxModal('#scheduleDetailModal', url);
+            }
+
+            function saveStatus() {
+                $.ajax({
+                    url: "",
+                    container: '#createStatus',
+                    type: "POST",
+                    data: $('#createStatus').serialize(),
+                    success: function(response) {
+                        $('#scheduleDetailModal').modal('hide');
+                        loadData();
+                    }
+                });
+            }
+
+            function updateStatus(id) {
+                let url = "{{ route('recruit.application-status.update', ':id') }}";
+                url = url.replace(':id', id);
+
+                $.ajax({
+                    url: url,
+                    container: '#updateStatus',
+                    type: "POST",
+                    data: $('#updateStatus').serialize(),
+                    success: function(response) {
+                        $('#scheduleDetailModal').modal('hide');
+                        loadData();
+                    }
+                });
+            }
+
+            function loadData() {
+                var startDate = $('#date-start').val();
+                var jobs = $('#jobs').val();
+                var location = $('#location').val();
+                var skill = $('#skill').val();
+                var questions = $('#questions').val();
+                var search = $('#search').val();
+                var question_value = $('#question-value').val();
+
+                if (startDate == '') {
+                    startDate = null;
+                }
+
+                var endDate = $('#date-end').val();
+
+                if (endDate == '') {
+                    endDate = null;
+                }
+
+                var url = '{{ route('recruit.job-applications.index') }}?startDate=' + startDate + '&endDate=' + endDate +
+                    '&jobs=' + jobs + '&search=' + search + '&location=' + location + '&skill=' + skill + '&questions=' +
+                    questions + '&question_value=' + question_value;
+
+                $.ajax({
+                    url: url,
+                    container: '.container-row',
+                    type: "GET",
+                    success: function(response) {
+                        $('.container-row').html(response.view);
+                    }
+
+                })
+            }
+
+            // search($('#search'), 500, 'data');
+
+            $('.toggle-filter').click(function() {
+                $('#ticket-filters').toggle('slide');
+            });
+
+            $('#question_value').hide();
+            $('#questions').change(function() {
+                $('#question_value').show();
+            });
+
+            //click mail setting open modal
+            $(document).on('click', '.mail_setting', function() {
+                var data1 = '';
+                $.ajax({
+                    url: "{{ route('recruit.application-setting.create') }}",
+                    success: function(data) {
+                        data1 = eval(data.mail_setting);
+                        var options = '';
+                        $.each(data1, function(name, status) {
+                            if (status.status == true) {
+                                options +=
+                                    '<input type="checkbox"  checked style=" style="text-align: center; margin: 6px 15px 13px 0px;" name="checkBoardColumn[]" id="checkbox-' +
+                                    name + '" value="' + name + '"  />';
+                                options += '<label for="checkbox-' + name +
+                                    '" style="text-align: center; margin: 6px 15px 13px 0px;">' +
+                                    status.name + '</label>';
+                            } else {
+                                options +=
+                                    '<input type="checkbox" style="text-align: center; margin: 6px 10px 4px 0px;" class = "iCheck-helper" name="checkBoardColumn[]" id="checkbox-' +
+                                    name + '" value="' + name + '"  />';
+                                options += '<label for="checkbox-' + name +
+                                    '" style="text-align: center; margin: 6px 10px 4px 0px;">' +
+                                    status.name + '</label>';
+                            }
+                        });
+                        $('#assetNameMenu').html(options);
+                        $('#legal_term').val(data.legal_term);
+                        $('#ModalLoginForm').modal('show');
+                        return false;
+                    }
+
+                });
+
+            });
+        </script>
+        <script>
+            // $('.example-fontawesome').barrating({
+            //     theme: 'fontawesome-stars',
+            //     showSelectedRating: false,
+            //     readonly: true,
+
+            // });
+
+            $(function() {
+                $('.bar-rating').each(function() {
+                    const val = $(this).data('value');
+
+                    $(this).barrating('set', val ? val : '');
+                });
+            });
+
+            // $('.example-fontawesome').barrating('set', '');
+
+            // Send Reminder and notification to Candidate
+            function sendReminder(id, type, status) {
+                var msg;
+
+                if (type == 'notify') {
+                    if (status == 'hired') {
+                        msg = "@lang('errors.sendHiredNotification')";
+                    } else {
+                        msg = "@lang('errors.sendRejectedNotification')";
+                    }
+                } else {
+                    msg = "@lang('errors.sendInterviewReminder')";
+                }
+                swal({
+                        title: `@lang('errors.areYouSure')`,
+                        text: msg,
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                    })
+                    .then((isConfirm) => {
+                        if (isConfirm) {
+
+                            var url = "";
+                            url = url.replace(':id', id);
+                            url = url.replace(':type', type);
+
+                            // update values for all tasks
+                            $.ajax({
+                                url: url,
+                                type: 'GET',
+                                success: function(response) {}
+                            });
+                        }
+                    });
+            }
+
+            $(function() {
+                // Getting Data of all colomn and applications 
+
+                var oldParentId, currentParentId, oldElementIds = [],
+                    i = 1;
+
+                let draggingTaskId = 0;
+                let draggedTaskId = 0;
+                let missingElementId = 0;
+                let currentApplicationId = 0;
+
+                $('.lobipanel').on('dragged.lobiPanel', function(e, lobiPanel) {
+                    var $parent = $(this).parent(),
+                        $children = $parent.children('.show-detail');
+                    var pr = $(this).closest('.board-column');
+
+                    if (draggingTaskId !== 0) {
+                        oldParentId = pr.data('column-id');
+                    }
+                    currentParentId = pr.data('column-id');
+
+                    var boardColumnIds = [];
+                    var applicationIds = [];
+                    var prioritys = [];
+
+                    $children.each(function(ind, el) {
+                        boardColumnIds.push($(el).closest('.board-column').data('column-id'));
+                        applicationIds.push($(el).data('application-id'));
+                        prioritys.push($(el).index());
+                    });
+
+
+
+                    if (oldParentId == 3 && currentParentId == 4) {
+                        $('#buttonBox' + oldParentId + currentApplicationId).show();
+                        var button = '<button onclick="sendReminder(' + currentApplicationId +
+                            ', \'notify\')" type="button" class="btn btn-sm btn-info notify-button">@lang('app.notify')</button>';
+                        $('#buttonBox' + oldParentId + currentApplicationId).html(button);
+                        $('#buttonBox' + oldParentId + currentApplicationId).attr('id', 'buttonBox' +
+                            currentParentId + currentApplicationId);
+
+                    } else if (oldParentId == 4 && currentParentId == 3) {
+                        var timeStamp = $('#buttonBox' + oldParentId + currentApplicationId).data('timestamp');
+                        var currentDate = '';
+                        if (currentDate < timeStamp) {
+                            $('#buttonBox' + oldParentId + currentApplicationId).show();
+                            var button = '<button onclick="sendReminder(' + currentApplicationId +
+                                ', \'reminder\')" type="button" class="btn btn-sm btn-info notify-button">@lang('app.reminder')</button>';
+                            $('#buttonBox' + oldParentId + currentApplicationId).html(button);
+                        }
+                        $('#buttonBox' + oldParentId + currentApplicationId).attr('id', 'buttonBox' +
+                            currentParentId + currentApplicationId);
+                    } else {
+                        $('#buttonBox' + oldParentId + currentApplicationId).hide();
+                        $('#buttonBox' + oldParentId + currentApplicationId).attr('id', 'buttonBox' +
+                            currentParentId + currentApplicationId);
+                    }
+
+                    var startDate = $('#date-start').val();
+                    var jobs = $('#jobs').val();
+                    var search = $('#search').val();
+
+                    if (startDate == '') {
+                        startDate = null;
+                    }
+
+                    var endDate = $('#date-end').val();
+
+                    if (endDate == '') {
+                        endDate = null;
+                    }
+                    // update values for all tasks
+                    $.ajax({
+                        url: '{{ route('recruit.job-applications.updateIndex') }}',
+                        type: 'POST',
+                        container: '.container-row',
+                        data: {
+                            boardColumnIds: boardColumnIds,
+                            applicationIds: applicationIds,
+                            prioritys: prioritys,
+                            startDate: startDate,
+                            jobs: jobs,
+                            search: search,
+                            endDate: endDate,
+                            draggingTaskId: draggingTaskId,
+                            draggedTaskId: draggedTaskId,
+                            '_token': '{{ csrf_token() }}'
+                        },
+                        success: function(response) {
+                            if (draggedTaskId !== 0) {
+                                $.each(response.columnCountByIds, function(key, value) {
+                                    $('#columnCount_' + value.id).html((value
+                                        .status_count));
+                                    $('#columnCount_' + value.id).parents('.board-column')
+                                        .find('.lobipanel').css('border-color', value
+                                            .color);
+                                });
+                            }
+                        }
+                    });
+                    if (draggingTaskId !== 0) {
+                        draggedTaskId = draggingTaskId;
+                        draggingTaskId = 0;
+                    }
+                }).lobiPanel({
+                    sortable: true,
+                    reload: false,
+                    editTitle: false,
+                    close: false,
+                    minimize: false,
+                    unpin: false,
+                    expand: false,
+                });
+
+                var isDragging = 0;
+                $('.lobipanel-parent-sortable').on('sortactivate', function() {
+                    $('.board-column > .panel-body').css('overflow-y', 'unset');
+                    isDragging = 1;
+                });
+                $('.lobipanel-parent-sortable').on('sortstop', function(e) {
+                    $('.board-column > .panel-body').css('overflow-y', 'auto');
+                    isDragging = 0;
+                });
+
+                $('.show-detail').click(function(event) {
+                    if ($(event.target).hasClass('notify-button')) {
+                        return false;
+                    }
+                    var id = $(this).data('application-id');
+                    draggingTaskId = currentApplicationId = id;
+
+                    if (isDragging == 0) {
+                        $(".right-sidebar").slideDown(50).addClass("shw-rside");
+
+                        var url = "{{ route('recruit.job-applications.show', ':id') }}";
+                        url = url.replace(':id', id);
+
+                        $.easyAjax({
+                            type: 'GET',
+                            url: url,
+                            success: function(response) {
+                                if (response.status == "success") {
+                                    $('#right-sidebar-content').html(response.view);
+                                }
+                            }
+                        });
+                    }
+                })
+            })
+            // $('.lobipanel').lobiPanel();
+        </script>
+    @endpush
+</x-app-layout>

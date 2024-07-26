@@ -1,0 +1,392 @@
+<x-app-layout>
+    <style>
+        .bootstrap-select.show-menu-arrow.open>.dropdown-toggle,
+        .bootstrap-select.show-menu-arrow.show>.dropdown-toggle {
+            z-index: 0 !important;
+        }
+    </style>
+    
+    @section('title', 'Daily Work')
+    <div class="card">
+        <div class="tab-content">
+
+            <div class="card-header">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h6 class="tx-15 mg-b-0">{{ $website_name }}</h6>
+                    <a href="{{ route('seo.duplicate-checker', $website_listing->id) }}"
+                        class="btn btn-sm btn-bg d-flex align-items-center mg-r-5"><i data-feather="plus"></i><span
+                            class="d-none d-sm-inline mg-l-5">Duplicate Checker</span></a>
+
+                </div>
+            </div>
+
+            @foreach ($seo_task_listing as $key => $listing)
+                @if ($listing->no_of_submission)
+                    @php
+                        $sl_no = 0;
+                        $count_report = 0;
+                    @endphp
+                    <div class="card-body">
+                        <h5>
+                            @if ($listing->seotaskresult != null)
+                                {{ $listing->seotaskresult->seo_task_title }}
+                            @endif
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="save-website-data-{{ $listing->id }}" method="post">
+                            <input type="hidden" name="website_id" value="{{ $website_listing->id }}">
+                            <input type="hidden" name="seo_task_id" value="{{ $listing->seo_task_id }}">
+                            <input type="hidden" name="total_report" value="{{ $listing->no_of_submission }}" ?>
+                            <div class="table-responsive" id="department">
+                                <table class="table border table_wrapper">
+                                    <thead>
+                                        <tr>
+                                            {{-- <th class="border-bottom p-3">
+                                                @if ($listing->seotaskresult != null)
+                                                    {{ $listing->seotaskresult->seo_task_title }}
+                                                @endif
+                                            </th> --}}
+                                            <th class="border-bottom p-3"> {{ __('common.sl_no') }}</th>
+                                            <th class="border-bottom p-3" style="min-width: 220px;">
+                                                {{ __('seo.website_url') }}
+                                            </th>
+                                            <th class="border-bottom p-3" style="min-width: 220px;">
+                                                {{ __('seo.posting_website') }}
+                                            </th>
+                                            <th class="border-bottom p-3">{{ __('seo.landing_url') }}</th>
+                                            <th class="border-bottom p-3">{{ __('seo.do_follow') }}</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+
+                                        @foreach ($listing->work_report as $report)
+                                            @php
+                                                $sl_no++;
+                                                $count_report = count((array) $listing->work_report);
+                                            @endphp
+
+                                            <tr>
+                                                <td class="">{{ $sl_no }}</td>
+                                                <td>
+                                                    <input type="hidden" name="update_id_{{ $sl_no }}"
+                                                        value="{{ $report->id ?? '' }}">
+                                                    <input class="form-control" type="text"
+                                                        name="website_url_{{ $sl_no }}"
+                                                        value="{{ $report->url ?? '' }}">
+                                                    @error('website_url')
+                                                        <div class="alert alert-danger">{{ $message }}</div>
+                                                    @enderror
+                                                </td>
+
+                                                <td class="d-flex">
+                                                    <div class="col-md-9">
+                                                        <select class="selectsearch show-menu-arrow"
+                                                            id="postingWebsite_{{ $sl_no }}"
+                                                            name="postingWebsite_{{ $sl_no }}"
+                                                            data-live-search="true" title="{{ __('seo.select') }}">
+                                                            @foreach ($listing->website_submission as $submission)
+                                                                <option
+                                                                    @if ($report->submission_websites_id == $submission->id) selected @endif
+                                                                    value="{{ $submission->id }}">
+                                                                    {{ $submission->website_url }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <a href="javascript:;"
+                                                            title="@lang('app.add') @lang('modules.jobs.jobType')" id=""
+                                                            class="btn btn-sm btn-info btn-outline addpostingurl"
+                                                            data-id="{{ $listing->seotaskresult->id }}"><i
+                                                                class="fa fa-plus"></i></a>
+
+
+                                                        <input type="hidden" name="web_name" id="web_name"
+                                                            value="{{ $website_name }}" />
+                                                    </div>
+                                                </td>
+                                                <td class="">
+                                                    <input class="form-control" type="text"
+                                                        name="landing_url_{{ $sl_no }}"
+                                                        value="{{ $report->landing_url ?? '' }}">
+                                                </td>
+                                                <td>
+                                                    <div class="custom-control custom-switch">
+                                                        <input type="checkbox" class="custom-control-input "
+                                                            {{ $report->linktype == 1 ? 'checked' : '' }}
+                                                            id="customSwitch_{{ $report->id }}"
+                                                            name="do_follow_{{ $sl_no }}">
+
+                                                        {{-- <input type="hidden" value="0"
+                                                            name="do_follow_{{ $sl_no }}" id="do_follows"> --}}
+
+                                                        <label class="custom-control-label"
+                                                            for="customSwitch_{{ $report->id }}"></label>
+
+                                                    </div>
+
+                                                </td>
+                                            </tr>
+                                        @endforeach
+
+                                        @php
+                                            $submission_no = $listing->no_of_submission - $count_report;
+                                        @endphp
+                                        @if ($submission_no)
+                                            @for ($a = 1; $a <= $submission_no; $a++)
+                                                <tr>
+                                                    <td class="">{{ $a + $sl_no }}</td>
+                                                    <td class="">
+                                                        <input class="form-control" type="text"
+                                                            name="website_url_{{ $a + $sl_no }}">
+                                                        @error('website_url')
+                                                            <div class="alert alert-danger">{{ $message }}</div>
+                                                        @enderror
+                                                    </td>
+                                                    <td class="d-flex">
+                                                        <div class="col-md-9">
+
+
+                                                            <select class="selectsearch show-menu-arrow form-control"
+                                                                id="postingWebsite_{{ $a + $sl_no }}"
+                                                                name="postingWebsite_{{ $a + $sl_no }}"
+                                                                title="{{ __('seo.select') }}" data-live-search="true">
+                                                                @if (!empty($listing->website_submission))
+                                                                    @foreach ($listing->website_submission as $submission)
+                                                                        @if (!empty($submission))
+                                                                            <option value="{{ $submission->id }}">
+                                                                                {{ $submission->website_url }}
+                                                                            </option>
+                                                                        @endif
+                                                                    @endforeach
+                                                                @endif
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            @if (!empty($listing->seotaskresult->id))
+                                                                <a href="javascript:;"
+                                                                    title="@lang('app.add') @lang('modules.jobs.jobType')"
+                                                                    id=""
+                                                                    class="btn btn-sm btn-info btn-outline addpostingurl"
+                                                                    data-id="{{ $listing->seotaskresult->id }}"><i
+                                                                        class="fa fa-plus"></i></a>
+                                                            @endif
+
+
+                                                            <input type="hidden" name="web_name" id="web_name"
+                                                                value="{{ $website_name }}" />
+                                                        </div>
+
+                                                    </td>
+                                                    <td class="">
+                                                        <input class="form-control" type="text"
+                                                            name="landing_url_{{ $a + $sl_no }}" />
+                                                    </td>
+                                                    <td>
+                                                        <div class="custom-control custom-switch">
+                                                            <input type="checkbox" class="custom-control-input "
+                                                                data-id=""
+                                                                id="customSwitchss_{{ $a + $sl_no }}"
+                                                                name="do_follow_{{ $a + $sl_no }}">
+
+                                                            {{-- <input type="hidden" name="do_follow_{{ $a + $sl_no }}"
+                                                            id="do_follo" value="0"> --}}
+
+                                                            <label class="custom-control-label"
+                                                                for="customSwitchss_{{ $a + $sl_no }}"></label>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            @endfor
+                                        @endif
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-3 px-2 text-center">
+                                <input type="button" class="btn btn-primary  save-website-form"
+                                    form-id="{{ $listing->id }}" value="{{ __('common.update') }}" />
+                            </div>
+                        </form>
+                    </div>
+                @endif
+
+            @endforeach
+        </div>
+    </div>
+
+
+
+
+    {{-- Ajax Modal Start for --}}
+    <div class="modal fade bs-modal-md in" id="addPostingModal" role="dialog" aria-labelledby="myModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg" id="modal-data-application">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title"><i class="icon-plus"></i> Add Posting Website</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i
+                            class="fa fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    Loading...
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn blue">Save changes</button>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    {{-- Ajax Modal Ends --}}
+
+
+    @push('scripts')
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
+
+        <!-- Latest compiled and minified JavaScript -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
+
+        {{-- <link rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.15.2/css/selectize.default.min.css"
+            integrity="sha512-pTaEn+6gF1IeWv3W1+7X7eM60TFu/agjgoHmYhAfLEU8Phuf6JKiiE8YmsNC0aCgQv4192s4Vai8YZ6VNM6vyQ=="
+            crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.15.2/js/selectize.min.js"
+            integrity="sha512-IOebNkvA/HZjMM7MxL0NYeLYEalloZ8ckak+NDtOViP7oiYzG5vn6WVXyrJDiJPhl4yRdmNAG49iuLmhkUdVsQ=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script> --}}
+        <script>
+            $('.addpostingurl').click(function() {
+                // var data = {
+                var task_id = $(this).attr("data-id");
+                var web_name = $("#web_name").val();
+                // };
+                var url = "{{ route('seo.work-posting-update') }}?id=" + task_id + "&" + "web_name=" + web_name
+                $('.modal-title').html("<i class='icon-plus'></i> Add Posting Website");
+                $.ajaxModal('#addPostingModal', url);
+            });
+
+
+
+
+            $(document).ready(function() {
+                $('.selectsearch').selectpicker();
+                //  $(".selectsearch").selectize();
+            });
+
+            $(document).ready(function() {
+                $('.save-website-form').click(function() {
+                    const url = "{{ route('seo.work-report-update', $website_listing->id) }}";
+                    var formID = $(this).attr('form-id');
+
+
+                    $.ajaxSetup({
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        }
+                    });
+                    $.ajax({
+                        url: url,
+                        formID: formID,
+                        container: '#save-website-data-' + formID,
+                        type: "POST",
+                        data: $('#save-website-data-' + formID).serialize(),
+                        success: function(response) {
+                            if (response.success) {
+                                toastr.success(response.success);
+                            } else {
+                                toastr.error(response.error);
+                            }
+                            location.reload();
+
+                        }
+                    })
+
+                });
+            });
+
+
+
+
+            // $(document).ready(function() {
+            //     $('.dofollo_toggle_class').change(function() {
+            //         let status = $(this).prop('checked') === true ? 1 : 0;
+
+            //         $("#do_follo").val(status);
+            //     });
+            // });
+            // $(document).ready(function() {
+            //     $('.dofollow_toggle_class').change(function() {
+            //         let status = $(this).prop('checked') === true ? 1 : 0;
+
+            //         $("#do_follows").val(status);
+            //     });
+            // });
+
+
+        </script>
+
+
+        <script>
+            // $(document).ready(function() {
+            //     $('.website_toggle_class').change(function() {
+            //         let status = $(this).prop('checked') === true ? 1 : 2;
+
+            //         $("#do_follow").val(status);
+            //     });
+            // });
+
+            $(document).on("click", ".save-department", function() {
+
+                var data = {
+                    website_id: $("#website").val(),
+                    seo_task_id: $("#seo_task_id").val(),
+                    website_url: $("#website_url").val(),
+                    website_username: $("#website_username").val(),
+                    email: $("#email").val(),
+                    website_password: $("#website_password").val(),
+                    da: $("#da").val(),
+                    spam_score: $("#website_spam_score").val(),
+                    do_follow: $("#do_follow").val(),
+                };
+                $('#submission_update').addClass('was-validated');
+                if ($('#submission_update')[0].checkValidity() === false) {
+                    event.stopPropagation();
+                } else {
+
+
+                    $.ajaxSetup({
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        }
+                    });
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ route('seo.work-posting-store') }}",
+                        data: data,
+                        dataType: "json",
+
+                        success: function(response) {
+                            $('#addPostingModal').modal('hide');
+                            location.reload();
+                            toastr.success(response.success);
+                        }
+                    });
+                }
+
+            });
+
+            $(document).ready(function() {
+                $('.website_toggle_class').change(function() {
+                    let status = $(this).prop('checked') === true ? 1 : 0;
+                       console.log(status);
+                    $("#do_follow").val(status);
+                });
+            });
+        </script>
+    @endpush
+</x-app-layout>

@@ -1,0 +1,684 @@
+<?php
+
+namespace Modules\Recruit\Http\Controllers;
+
+use App\Helper\Helper;
+use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
+use App\Http\Controllers\BaseController;
+
+class JobApplicationController extends BaseController
+{
+
+    public function __construct()
+    {
+        $this->pageAccess = config('acceskey.job_applications');
+        $this->pageTitle = 'Job Application';
+ 
+    }
+
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index(Request $request)
+    {
+        $this->content = [];
+        
+        $parameters =array(
+            "language" => "1",
+            "startDate" => $request->startDate,
+            "endDate" => $request->endDate,
+            "jobs" => $request->jobs,
+            "search"=>$request->search,
+            "location" => $request->location,
+            "questions"=>$request->questions,
+            "question_value" => $request->question_value,
+            "skill" => $request->skill,
+            "type" => $request->type,
+            'api_token' => Helper::getCurrentuserToken(),       
+           );
+
+           
+    
+            $apiurl = config('apipath.job-application-index');
+            
+            $responseData = Helper::ApiServiceResponse($apiurl, $parameters);
+  
+            if(!empty($responseData))
+            $this->content = $responseData->data;
+
+
+                
+            // if ($request->ajax()) {
+            //     $view = view('Recruit::job-applications.board-data', collect($this->data) )->render();
+            //     return response()->json(['view' => $view]);
+            // } 
+                 
+        return view('Recruit::job-applications.board', collect($this->data));
+           
+          
+ 
+    }
+
+    
+
+    public function create(Request $request)
+    { 
+        $this->content = [];
+         $parameters =array(
+        'api_token' => Helper::getCurrentuserToken(),      
+
+        ); 
+
+        $apiurl = config('apipath.job-application-create');
+        $responseData = Helper::ApiServiceResponse($apiurl, $parameters);
+ 
+      if(!empty($responseData))
+      $this->content = $responseData->data;
+
+         return view('Recruit::job-applications.create', $this->data); 
+    }
+    
+
+    /**
+     * @param $jobID
+     * @return mixed
+     * @throws \Throwable
+     */
+    public function jobQuestion($jobID, $applicationId = null)
+    {       
+        $parameters =array(
+            'jobID' => $jobID,
+            'applicationId' => $applicationId,
+            'api_token' => Helper::getCurrentuserToken(),
+        );
+ 
+
+        $apiurl = config('apipath.job-application-jobQuestion');
+        $responseData = Helper::ApiServiceResponse($apiurl, $parameters);
+
+        $data = [
+            'gender' => $responseData->data->gender,
+            'jobQuestion' => $responseData->data->jobQuestion,
+            'job' => $responseData->data->job
+        ];
+        
+
+        $view = view('Recruit::job-applications.job-question', $data)->render();
+
+        
+        // $requiredColumnsView = view('Recruit::job-applications.required-columns', $responseData->data->options)->render();
+
+        // $requiredSectionsView = view('Recruit::job-applications.required-sections',
+        // $responseData->data->sections)->render();
+          
+        // $data = ['status' => 'success', 'view' => $view, 'count' => $responseData->data->count];
+
+
+         $options = ['job' => $responseData->data->job, 'gender' =>$responseData->data->gender];
+         
+         $sections = ['section_visibility' => $responseData->data->job->section_visibility];
+
+
+         $requiredColumnsView = view('Recruit::job-applications.required-columns', $options)->render();
+         $requiredSectionsView = view('Recruit::job-applications.required-sections', $sections)->render();
+
+         $count = count($responseData->data->jobQuestion);
+
+         $data = ['status' => 'success', 'view' => $view, 'requiredColumnsView' => $requiredColumnsView,
+         'requiredSectionsView' => $requiredSectionsView, 'count' => $count];
+
+         if ($applicationId) {
+         $data = Arr::add($data, 'application', $application);
+         }
+         
+         $message = Helper::translation($responseData->message);
+ 
+         return response()->json(['success' => $message , 'data' => $data]);
+    }
+
+
+    public function edit($id)
+    {
+        $this->content = [];
+         $parameters =array(
+            "id" => $id,
+            'api_token' => Helper::getCurrentuserToken(),      
+        );
+
+        $apiurl = config('apipath.job-application-edit');
+        $responseData = Helper::ApiServiceResponse($apiurl, $parameters); 
+
+        if(!empty($responseData))
+        $this->content = $responseData->data;
+        
+         return view('Recruit::job-applications.edit', $this->data); 
+    }
+
+    public function data(Request $request)
+    {
+        
+       
+        $parameters =array(
+          'status' => $request->status,
+           'jobs' => $request->jobs,
+           'skill' => $request->skill,
+           'location' => $request->location,
+           'questions' => $request->questions,
+           'question_value' => $request->question_value,
+           'startDate' => $request->startDate,
+           'endDate' => $request->endDate,
+        'api_token' => Helper::getCurrentuserToken(),      
+           
+        ); 
+
+        $apiurl = config('apipath.job-application-data');
+        $responseData = Helper::ApiServiceResponse($apiurl, $parameters);
+
+        //  dd($responseData);
+
+
+        return DataTables::of($responseData->data->jobApplications)
+            ->addColumn('action', function ($row) {
+                    $action = '';
+                    
+                    // $action .= '<a href="javascript:;" class="btn btn-success btn-circle show-document"
+                    //   data-toggle="tooltip" onclick="this.blur()" data-row-id="' . $row->id . '" data-modal-name="' . '\\' . get_class($row) . '" data-original-title="' . __('modules.jobApplication.viewDocuments') . '"><i class="fa fa-search" aria-hidden="true"></i></a>';
+            
+                    $action .= ' <a href="' . route('recruit.job-applications.edit', [$row->id]) . '" class="btn btn-primary btn-circle"
+                      data-toggle="tooltip" onclick="this.blur()" data-original-title="' . __('app.edit') . '"><i class="fa fa-pencil" aria-hidden="true"></i></a>';
+                
+                    $action .= ' <a href="javascript:;" class="btn btn-danger btn-circle sa-params"
+                      data-toggle="tooltip" onclick="this.blur()" data-row-id="' . $row->id . '" data-original-title="' . __('app.delete') . '"><i class="fa fa-times" aria-hidden="true"></i></a>';
+              
+                return $action;
+            })
+            ->editColumn('full_name', function ($row) {
+                return '<a href="javascript:;" class="show-detail" data-widget="control-sidebar" data-slide="true" data-row-id="' . $row->id . '">' . ucwords($row->full_name) . '</a>';
+            })
+            ->editColumn('title', function ($row) {
+                return ucfirst($row->job->title ?? '');
+            })
+            ->editColumn('location', function ($row) {
+                return ucwords($row->job->location->location ?? '');
+            })
+            ->editColumn('status', function ($row) {
+                 return '<span>' . ucwords($row->status->status) .'</span>
+                 <span class="badge badge-pill badge-primary text-white" style= "margin-bottom: -3px; height: 15px; background:' . $row->status->color . '"> </span>';
+                 
+            })
+            ->rawColumns([ 'full_name','status', 'action'])
+            ->addIndexColumn()
+            ->make(true);
+    }
+
+
+    public function createSchedule(Request $request, $id)
+    {
+        $parameters = [
+            'date' => $request->date,
+            'id' => $id,
+        ];
+ 
+        $apiurl = config('apipath.job-application-createSchedule');
+        $responseData = Helper::ApiServiceResponse($apiurl, $parameters);
+       
+ 
+        return view('Recruit::job-applications.interview-create', collect($responseData->data))->render();
+
+    }
+
+    public function storeSchedule(StoreRequest $request)
+    {
+        
+        $this->setZoomConfigs();
+
+        $dateTime = $request->scheduleDate . ' ' . $request->scheduleTime;
+        $dateTime = Carbon::createFromFormat('Y-m-d H:i', $dateTime);
+        if($request->interview_type == 'online'){
+            $data = $request->all();
+            $meeting = new ZoomMeeting();
+            $data['meeting_name'] = $request->meeting_title;
+            $data['start_date_time'] = $dateTime;
+            $data['end_date_time'] = $request->end_date . ' ' . $request->end_time;
+            $meeting = $meeting->create($data);
+            $host = User::find($request->create_by);
+            $user = Zoom::user()->find('me');
+            $meetings = $this->createMeeting($user, $meeting,  null, $host);
+         } 
+         else{
+             $meetings = '';
+        } 
+        // store Schedule
+        $interviewSchedule = new InterviewSchedule();
+        $interviewSchedule->interview_type =$request->interview_type;
+        $interviewSchedule->meeting_id = ($meetings!= '') ? $meetings->id: null;
+        $interviewSchedule->job_application_id = $request->candidates[0];
+        $interviewSchedule->schedule_date = $dateTime;
+        $interviewSchedule->save();
+
+        // Update Schedule Status
+        $status = ApplicationStatus::where('status', 'interview')->first();
+        $jobApplication = $interviewSchedule->jobApplication;
+        $jobApplication->status_id = $status->id;
+        $jobApplication->save();
+
+        if($request->comment){
+            $scheduleComment = [
+                'interview_schedule_id' => $interviewSchedule->id,
+                'user_id' => $this->user->id,
+                'comment' => $request->comment
+            ];
+
+            $interviewSchedule->comments()->create($scheduleComment);
+        }
+
+        if (!empty($request->employees)) {
+            $interviewSchedule->employees()->attach($request->employees);
+
+            // Mail to employee for inform interview schedule
+            Notification::send($interviewSchedule->employees, new ScheduleInterview($jobApplication,$meetings));
+        }
+        if(!$request->interview_type){
+            $meeting ='';
+        }
+        // mail to candidate for inform interview schedule
+        Notification::send($jobApplication, new CandidateScheduleInterview($jobApplication, $interviewSchedule,$meetings));
+
+        return Reply::redirect(route('admin.interview-schedule.index'), __('menu.interviewSchedule') . ' ' . __('messages.createdSuccessfully'));
+    }
+
+   
+
+    public function store(Request $request)
+    {   
+       
+        $parameters = [
+            'full_name'=>$request->full_name,
+            'job_id'=>$request->job_id,
+            'email'=>$request->email,
+            'phone'=>$request->phone,
+            'address'=>$request->address,
+            'cover_letter'=>$request->cover_letter,
+            'gender'=>$request->gender,
+            'dob'=>$request->dob,
+            'country'=>$request->country,
+            'state'=>$request->state,
+            'city'=>$request->city,
+            'zip_code'=>$request->zip_code, 
+            'answer'=>$request->answer,
+            'api_token' => Helper::getCurrentuserToken(),      
+        ];
+        
+        $files =[];
+
+
+        if( $request->hasFile('photo')){
+            $photo_file = $request->file('photo');
+
+            $photo_ary =  [
+                'name' => 'photo',
+                'contents' => file_get_contents($photo_file),
+                'filename' => $photo_file->getClientOriginalName()
+            ];
+    
+            array_push($files, $photo_ary);
+        }
+        
+        if( $request->hasFile('resume')){
+            $resume_file = $request->file('resume');
+            $resume_ary = [
+                'name' => 'resume',
+                'contents' => file_get_contents($resume_file),
+                'filename' => $resume_file->getClientOriginalName()
+            ];
+            array_push($files, $resume_ary);
+         }
+         
+        $apiurl = config('apipath.job-application-store');
+        $responseData = Helper::ApiServiceResponse($apiurl, $parameters, $files);
+        $message = Helper::translation($responseData->message);
+        if($responseData->status == true){
+            return redirect()->route('recruit.job-applications.index')->with(['success' => $message]);
+            
+        }
+        else{
+            return redirect()->route('recruit.job-applications.index')->with('error',$message);
+        }  
+    }
+
+    public function update(Request $request, $id)
+    {
+          
+        $parameters = [
+            'id' => $id,
+            'full_name'=>$request->full_name,
+            'job_id'=>$request->job_id,
+            'status_id'=>$request->status_id,
+            'email'=>$request->email,
+            'phone'=>$request->phone,
+            'address'=>$request->address,
+            'cover_letter'=>$request->cover_letter,
+            'gender'=>$request->gender,
+            'dob'=>$request->dob,
+            'country'=>$request->country,
+            'state'=>$request->state,
+            'city'=>$request->city,
+            'zip_code'=>$request->zip_code,
+            'answer'=>$request->answer,
+            'api_token' => Helper::getCurrentuserToken(),   
+        ];
+        
+        $files =[];
+
+        if( $request->hasFile('photo')){
+            $photo_file = $request->file('photo');
+
+            $photo_ary = [
+            'name' => 'photo',
+            'contents' => file_get_contents($photo_file),
+            'filename' => $photo_file->getClientOriginalName()
+            ];
+
+            array_push($files, $photo_ary);
+            
+        }
+
+        if( $request->hasFile('resume')){
+            $resume_file = $request->file('resume');
+            $resume_ary = [
+            'name' => 'resume',
+            'contents' => file_get_contents($resume_file),
+            'filename' => $resume_file->getClientOriginalName()
+            ];
+            array_push($files, $resume_ary);
+
+        }
+        
+
+        $apiurl = config('apipath.job-application-update');
+        $responseData = Helper::ApiServiceResponse($apiurl, $parameters , $files);
+ 
+        $message = Helper::translation($responseData->message);
+
+        if($responseData->status == true){
+            return redirect()->route('recruit.job-applications.table')->with(['success' => $message]);
+        }
+        else{
+            return redirect()->route('recruit.job-applications.table')->with('error',$message);
+        }  
+       
+    
+    }
+
+    public function destroy($id)
+    { 
+
+
+         $parameters = array(
+            "id" => $id,
+        'api_token' => Helper::getCurrentuserToken(),      
+
+        );
+        
+        $apiurl = config('apipath.job-application-destroy'); 
+        $responseData = Helper::ApiServiceResponse($apiurl, $parameters);
+        $message = Helper::translation($responseData->message);
+        return response()->json(['success' => $message]);
+
+    }
+
+    public function show($id)
+    {
+        
+
+        $parameters = array(
+            "id" => $id,
+        'api_token' => Helper::getCurrentuserToken(),      
+
+        );
+        
+        $apiurl = config('apipath.job-application-show'); 
+        $responseData = Helper::ApiServiceResponse($apiurl, $parameters);
+
+         $view = view('Recruit::job-applications.show', collect($responseData->data))->render(); 
+
+        return response()->json(['status' => 'success', 'view' => $view]);
+
+
+    }
+
+    public function updateIndex(Request $request)
+    {
+
+        $parameters = array(
+            
+                "applicationIds"=>$request->applicationIds,
+                "boardColumnIds" => $request->boardColumnIds,
+                "prioritys" => $request->prioritys,
+                "startDate"=>$request->startDate,
+                "endDate"=>$request->endDate,
+                "draggedTaskId"=>$request->draggedTaskId,
+                "jobs"=>$request->jobs,
+                "search"=>$request->search,
+        'api_token' => Helper::getCurrentuserToken(),      
+            );
+
+        $apiurl = config('apipath.job-application-updateIndex'); 
+        $responseData = Helper::ApiServiceResponse($apiurl, $parameters);
+      
+
+        return response()->json(['success' => $responseData->data]);
+    }
+
+    public function table()
+    {
+        
+        $parameters =array(
+
+            "language" => "1",
+        'api_token' => Helper::getCurrentuserToken(),      
+        );
+    
+        $apiurl = config('apipath.job-application-table');
+        $responseData = Helper::ApiServiceResponse($apiurl, $parameters);
+   
+                        
+        return view('Recruit::job-applications.index', collect($responseData->data));
+
+    }
+
+    public function ratingSave(Request $request, $id)
+    {
+        abort_if(!$this->user->cans('edit_job_applications'), 403);
+
+        $application = JobApplication::withTrashed()->findOrFail($id);
+        $application->rating = $request->rating;
+        $application->save();
+
+        return Reply::success(__('messages.updatedSuccessfully'));
+    }
+
+    // Job Applications data Export
+    public function export($status, $location, $startDate, $endDate, $jobs)
+    {
+        
+
+        $parameters =array(
+            'status' => $status,
+            'location' => $location,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'jobs' => $jobs,
+        'api_token' => Helper::getCurrentuserToken(),      
+        ); 
+
+
+        
+ 
+        $apiurl = config('apipath.job-application-export');
+        $responseData = Helper::ApiServiceResponse($apiurl, $parameters); 
+
+        $message = Helper::translation($responseData->message);
+        if($responseData->status == true){
+            return response()->download($responseData->data);
+        }else{
+           return Redirect::back()->with('error', $message);
+        }
+    }
+
+    public function getName($arr, $id)
+    {
+        $result = array_filter($arr, function ($value) use ($id) {
+            return $value['id'] == $id;
+        });
+        return current($result)['name'];
+    }
+
+    public function archiveJobApplication(Request $request, $id)
+    {
+        $parameters =array(
+            'id' => $id,    
+            'api_token' => Helper::getCurrentuserToken(),       
+         );         
+
+        
+         $apiurl = config('apipath.job-application-archive-job-application');
+ 
+         $responseData = Helper::ApiServiceResponse($apiurl, $parameters);
+
+        
+        return response()->json(['status' => 'success']);
+
+    }
+
+    public function unarchiveJobApplication(Request $request, $application_id)
+    {
+
+        $parameters =array(
+            'application_id' => $application_id,
+            'api_token' => Helper::getCurrentuserToken(),
+        );
+ 
+
+        $apiurl = config('apipath.job-application-unarchiveJob');
+
+        $responseData = Helper::ApiServiceResponse($apiurl, $parameters);
+        $message = Helper::translation($responseData->message);
+
+        return response()->json(['status' => $message]);
+    }
+
+    public function addSkills(Request $request, $applicationId)
+    { 
+
+        $parameters =array(
+        'applicationId' => $applicationId,
+        'skills' => $request->skills,
+        'api_token' => Helper::getCurrentuserToken(),
+        );
+
+
+        $apiurl = config('apipath.job-application-addskill');
+
+        $responseData = Helper::ApiServiceResponse($apiurl, $parameters);
+         $message = Helper::translation($responseData->message);
+        return response()->json(['status' => $message]);
+ 
+ 
+    }
+
+    public function loadMore(Request $request)
+    {
+
+        $startDate = ($request->startDate != 'null') ? Carbon::parse( $request->startDate)->toDateString() : null;
+        $endDate = ($request->endDate != 'null') ? Carbon::parse($request->endDate)->toDateString() : null;
+        $skip = $request->currentTotalRecords;
+        // dd($skip);
+        
+
+        $totalRecord = $request->totalRecord;
+
+        $this->currentDate = Carbon::now()->timestamp;
+
+        $applications = JobApplication::with('status')->select('job_applications.*')
+        ->where('status_id', $request->columnId);
+        
+        
+        if ($startDate !== null && $request->startDate != 'null' && $request->startDate != '') {
+            $applications = $applications->where(DB::raw('DATE(job_applications.`created_at`)'), '>=', $startDate);
+        } else {
+        }
+        
+
+        if ($endDate !== null && $request->endDate != 'null' && $request->endDate != '') {
+            $applications = $applications->where(DB::raw('DATE(job_applications.`created_at`)'), '<=', $endDate);
+        } else {
+        }
+       
+        // Filter By jobs
+        if ($request->jobs != 'all' && $request->jobs != '') {
+            $applications = $applications->where('job_applications.job_id', $request->jobs);
+        }
+        
+        // Filter by EndDate
+        if ($request->search != null && $request->search != '') {
+            $applications = $applications->where('full_name', 'LIKE', '%' . $request->search . '%')
+                    ->orWhere('email', 'LIKE', '%' . $request->search . '%')
+                    ->orWhere('phone', 'LIKE', '%' . $request->search . '%');
+                   
+        }
+
+        // Filter  by Location
+        if ($request->location != 'all' && $request->location != '')
+        {
+            $applications->leftJoin('jobs', 'jobs.id', 'job_applications.job_id')
+                ->where('jobs.location_id', '=', $request->location);
+        }
+
+        if($request->questions != 'all' && $request->questions != ''){
+
+           $applications->join('job_questions', 'job_questions.job_id', 'job_applications.job_id')
+                ->where('job_questions.question_id', '=', $request->questions);
+        }
+
+        if($request->question_value != '' && $request->questions != 'all' && $request->questions != ''){
+            
+            $applications->join('job_application_answers', 'job_application_answers.job_application_id', 'job_applications.id')
+            ->where('job_application_answers.question_id',  $request->questions)
+            ->where('job_application_answers.answer', 'LIKE', '%' . $request->question_value . '%');
+        }
+
+        // Filter by skills
+        if ($request->skill != 'all' && $request->skill != '') {
+            foreach (explode(',', $request->skill) as $key => $skill) {
+                if ($key == 0) {
+                     $applications->whereJsonContains('skills', $skill);
+                }
+                else {
+                     $applications->orWhereJsonContains('skills', $skill);
+                }
+            }
+        }
+
+        $applications->orderBy('column_priority')->skip($skip)->take($this->perPage);
+        $applications = $applications->get();
+
+
+        
+        $this->applications = $applications;
+
+        if ($totalRecord <= ($skip + $this->perPage)) {
+            $loadStatus = 'hide';
+        }
+        else {
+            $loadStatus = 'show';
+        }
+
+        $view = view('admin.job-applications.load_more', $this->data)->render();
+
+        return Reply::dataOnly(['view' => $view, 'load_more' => $loadStatus]);
+    }
+}

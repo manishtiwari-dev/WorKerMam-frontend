@@ -1,0 +1,88 @@
+{
+    "name": "laravel/laravel",
+    "type": "project",
+    "description": "The Laravel Framework.",
+    "keywords": ["framework", "laravel"],
+    "license": "MIT",
+    "require": {
+        "php": "^7.3|^8.0",
+        "barryvdh/laravel-snappy": "^1.0",
+        "fruitcake/laravel-cors": "^2.0",
+        "guzzlehttp/guzzle": "^7.0.1",
+        "laravel/framework": "^9.0",
+        "laravel/sanctum": "^2.11",
+        "laravel/tinker": "^2.5",
+        "laravelcollective/html": "^6.4",
+        "maatwebsite/excel": "^3.1",
+        "phpoffice/phpspreadsheet": "^1.25",
+        "yajra/laravel-datatables": "*"
+    },
+    "require-dev": {
+        "spatie/laravel-ignition": "^1.0",
+        "fakerphp/faker": "^1.9.1",
+        "laravel/sail": "^1.0.1",
+        "mockery/mockery": "^1.4.4",
+        "nunomaduro/collision": "^6.1",
+        "phpunit/phpunit": "^9.5.10"
+    },
+    "autoload": {
+        "files": ["app/Helper/Helper.php"],
+        "psr-4": {
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/",
+            "Modules\\CRM\\": "Modules/CRM/src/",
+            "Modules\\SEO\\": "Modules/SEO/src/",
+            "Modules\\Setting\\": "Modules/Setting/src/",
+            "Modules\\UserManage\\": "Modules/UserManage/src/",
+            "Modules\\Marketing\\": "Modules/Marketing/src/",
+            "Modules\\Pcapi\\": "Modules/Pcapi/src/",
+            "Modules\\AddOnManager\\": "Modules/AddOnManager/src/",
+            "Modules\\Hrm\\": "Modules/Hrm/src/",
+            "Modules\\Sales\\": "Modules/Sales/src/",
+            "Modules\\Recruit\\": "Modules/Recruit/src/",
+            "Modules\\Support\\": "Modules/Support/src/",
+            "Modules\\AppReminder\\": "Modules/AppReminder/src/",
+            "Modules\\SystemSetting\\": "Modules/SystemSetting/src/"
+
+            
+
+
+
+
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    
+    "scripts": {
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover --ansi"
+        ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+        ],
+        "post-root-package-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "post-create-project-cmd": [
+            "@php artisan key:generate --ansi"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

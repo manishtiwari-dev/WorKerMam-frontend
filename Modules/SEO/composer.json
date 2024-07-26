@@ -1,0 +1,19 @@
+{
+    "name": "invoide/adminpanel",
+    "description": "Customer Relatioship Management",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "invoidea",
+            "email": "developer@invoidea.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "Modules\\SEO\\": "Modules/SEO/src/"
+        }
+    },
+    "require": {}
+}

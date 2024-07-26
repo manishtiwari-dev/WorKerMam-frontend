@@ -1,0 +1,424 @@
+<style>
+    .select2-wrapper .select2-container {
+        width: 100% !important
+    }
+    .showCategory{
+        display: none;
+    }
+</style>
+<x-app-layout>
+    @section('title', 'Update Transaction')
+    <div class="">
+        <div class="tab-content">
+            <form action="{{ route('accounts.transaction.update', $appTransaction->id) }}" method="post"
+                class="needs-validation" novalidate>
+                @csrf
+                @method('PUT')
+
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-6 col-sm-12 ps-4">
+                            <div class="border rounded p-3">
+                                <div class="border-bottom">
+                                    <h5>Update Transaction</h5>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="customer"
+                                            class="form-label mt-3">{{ __('sales.transaction_type') }}<span
+                                                class="text-danger">*</span></label>
+                                        <select name="transaction_type" id="transaction_type"
+                                            class="form-control select2" required>
+                                            <option selected disabled>{{ __('sales.select_transaction_type') }}</option>
+                                            <option value="income"
+                                                {{ $appTransaction->txn_type == 'income' ? 'selected' : '' }}> Income
+                                            </option>
+                                            <option value="expense"
+                                                {{ $appTransaction->txn_type == 'expense' ? 'selected' : '' }}> Expense
+                                            </option>
+                                            <option value="refund"
+                                                {{ $appTransaction->txn_type == 'refund' ? 'selected' : '' }}> Refund
+                                            </option>
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            {{ __('sales.txn_type_error') }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+
+                                        <label for="date" class="form-label mt-3">{{ __('sales.txn_date') }}<span
+                                                class="text-danger">*</span></label>
+                                        <input type="text"
+                                            value="{{ \Carbon\Carbon::parse($appTransaction->txn_date)->format('d-m-Y') }}"
+                                            name="date" id="date" class="form-control datepicker"
+                                            placeholder="Please Select Date" required />
+                                        <div class="invalid-feedback">
+                                            {{ __('sales.expense_error') }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="name" class="form-label mt-3">{{ __('sales.accounts') }}
+                                            <span class="text-danger">*</span></label>
+                                        <select name="account" id="account" class="form-control select2" required>
+                                            <option selected disabled>{{ __('sales.select_account') }}</option>
+                                            @if (!empty($accounts))
+                                                @foreach ($accounts as $account)
+                                                    <option
+                                                        {{ $appTransaction->account_id == $account->id ? 'selected' : '' }}
+                                                        value="{{ $account->id }}">{{ $account->account_title }} - {{ $account->account_number }}
+                                                    </option>
+                                                @endforeach
+                                            @endif
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            {{ __('sales.account_error') }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="amount"
+                                            class="form-label mt-3">{{ __('sales.expense_amount') }}<span
+                                                class="text-danger">*</span></label>
+                                        <input type="number" value="{{ $appTransaction->amount }}"
+                                            placeholder="{{ __('sales.ammount_placeholder') }}" step="0.0001" name="amount"
+                                            id="amount" class="form-control" required />
+                                        <div class="invalid-feedback">
+                                            {{ __('sales.ammount_error') }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6  showCategory CategoryDisplay">
+                                        <label for="category"
+                                            class="form-label mt-3">{{ __('sales.txn_category') }}<span
+                                                class="text-danger">*</span></label>
+                                        <select name="category" id="category" class="form-control select2" required>
+                                            <option selected disabled>{{ __('sales.select_expense_category') }}
+                                            </option>
+                                            @if (!empty($crm_expense_category))
+                                                @foreach ($crm_expense_category as $crm_expense)
+                                                    <option value="{{ $crm_expense->id }}"
+                                                        {{ $appTransaction->txn_category == $crm_expense->id ? 'selected' : '' }}>
+                                                        {{ $crm_expense->name }}
+                                                    </option>
+                                                @endforeach
+                                            @endif
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            {{ __('sales.category_error') }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="reference" class="form-label mt-3">{{ __('sales.txn_title') }}<span
+                                                class="text-danger">*</span></label>
+
+                                        <input name="reference" value="{{ $appTransaction->txn_title }}" type="text"
+                                            class="form-control" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="category" class="form-label mt-3">{{ __('sales.txn_head') }}<span
+                                                class="text-danger">*</span></label>
+                                        <select name="txn_head" id="txn_head" class="form-control select2">
+                                            <option selected disabled value="">
+                                                {{ __('sales.select_txn_head') }}</option>
+                                            @if (!empty($crm_txn_head))
+                                                @foreach ($crm_txn_head as $crm_txn)
+                                                    <option value="{{ $crm_txn->id }}" {{($crm_txn->id == $appTransaction->txn_head)? 'selected':''}}>{{ $crm_txn->head_title }}
+                                                    </option>
+                                                @endforeach
+                                            @endif
+                                        </select>
+                                        
+                                    </div>
+                                    <div class="col-md-6 mt-3">
+                                        <div class="custom-control custom-radio">
+                                            <input type="radio" id="customRadio1" name="customRadio"
+                                                class="custom-control-input">
+                                            <label class="custom-control-label" for="customRadio1">Customer</label>
+                                        </div>
+                                        <div class="custom-control custom-radio">
+                                            <input type="radio" id="customRadio2" name="customRadio"
+                                                class="custom-control-input">
+                                            <label class="custom-control-label" for="customRadio2">Invoices</label>
+                                        </div>
+                                        <div class="custom-control custom-radio">
+                                            <input type="radio" id="customRadio3" name="customRadio"
+                                                class="custom-control-input">
+                                            <label class="custom-control-label" for="customRadio3">Orders</label>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="hidden" name="radioInput" id="radioInput"/>
+                                        <div class="customer select2-wrapper" style="display: none">
+                                            <label for="customer"
+                                                class="form-label mt-3 w-100">{{ __('sales.customer') }}<span
+                                                    class="text-danger"></span></label>
+                                            <select name="customer" id="customer" class="form-control select2 w-100">
+                                                <option selected disabled value="">
+                                                    {{ __('sales.select_customer') }}
+                                                </option>
+                                                @if (!empty($customers))
+                                                    @foreach ($customers as $customer)
+                                                        <option
+                                                            {{ $appTransaction->customer_id == $customer->customer_id ? 'selected' : '' }}
+                                                            value="{{ $customer->customer_id }}">
+                                                            {{ $customer->first_name }} {{ $customer->last_name }}
+                                                        </option>
+                                                        </option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
+                                            <div class="invalid-feedback">
+                                                {{ __('sales.customer_error') }}
+                                            </div>
+                                        </div>
+                                        <div class="invoices select2-wrapper" style="display: none">
+                                            <label for="invoice"
+                                                class="form-label mt-3">{{ __('sales.invoice') }}<span
+                                                    class="text-danger"></span></label>
+                                            <select name="invoice" id="invoice" class="form-control select2">
+                                                <option selected disabled value="">
+                                                    {{ __('sales.select_invoice') }}
+                                                </option>
+                                                @if (!empty($invoices))
+                                                    @foreach ($invoices as $invoice)
+                                                        <option
+                                                            {{ $appTransaction->invoice_id == $invoice->id ? 'selected' : '' }}
+                                                            value="{{ $invoice->id }}">
+                                                            {{ $invoice->invoice_number }}</option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
+                                            <div class="invalid-feedback">
+                                                {{ __('sales.invoice_error') }}
+                                            </div>
+                                        </div>
+                                        <div class="orders select2-wrapper" style="display: none">
+                                            <label for="order"
+                                                class="form-label mt-3">{{ __('sales.order') }}<span
+                                                    class="text-danger"></span></label>
+                                            <select name="order" id="order" class="form-control select2">
+                                                <option selected disabled value="">
+                                                    {{ __('sales.select_orders') }}
+                                                </option>
+                                                @if (!empty($orders))
+                                                    @foreach ($orders as $order)
+                                                        <option
+                                                            {{ $appTransaction->order_id == $order->order_id ? 'selected' : '' }}
+                                                            value="{{ $order->order_id }}">
+                                                            {{ $order->order_number }} </option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
+                                            <div class="invalid-feedback">
+                                                {{ __('sales.customer_error') }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+
+                                        <label for="file"
+                                            class="form-label mt-3">{{ __('sales.attach_receipt') }}<span
+                                                class="text-danger">*</span></label>
+                                        @php
+                                            $imageUrl = $appTransaction->attachment;
+                                        @endphp
+                                        <input type="file" class="form-control dropify" data-height="100"
+                                            name="attachment"
+                                            data-default-file="{{ $file_url }}{{ $imageUrl ?? '' }}">
+                                        <div class="invalid-feedback">
+                                            {{ __('sales.file_error') }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label for="note" class="form-label mt-3">{{ __('sales.note') }}</label>
+                                        <textarea name="note" class="form-control">{{ $appTransaction->note }}</textarea>
+                                        <div class="invalid-feedback">
+                                            {{ __('sales.note_error') }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <!--end row-->
+                        <div class="col-lg-6 col-sm-12 ps-4">
+                            <div class="border p-3 rounded">
+                                <div class="border-bottom">
+                                    <h5>Advance Option</h5>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <label class="quotation_label"
+                                            for="currency">{{ __('sales.currency') }}</label>
+                                        <select class="form-control select2" name="currency" id="currency" required>
+                                            <option selected disabled>{{ __('sales.select_currency') }}</option>
+                                            @if (!empty($currency))
+                                                @foreach ($currency as $ls_data)
+                                                    <option value="{{ $ls_data }}"
+                                                        {{ $appTransaction->base_currency == $ls_data ? 'selected' : '' }}>
+                                                        {{ $ls_data }}
+                                                    </option>
+                                                @endforeach
+                                            @endif
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            {{ __('sales.currency_error') }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="baseAmount"
+                                            class="form-label">{{ __('sales.baseAmount') }}</label>
+                                        <input type="number"
+                                            placeholder="{{ __('sales.base_ammount_placeholder') }}"
+                                            name="baseAmount" value="{{ $appTransaction->base_amount }}"
+                                            id="baseAmount" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="row  mt-3">
+
+                                    <div class="col-md-6">
+                                        <label class="quotation_label" for="">Payment Method
+                                        </label>
+                                        <select class="form-control select2" name="payment_mode" required>
+                                            <option selected disabled>{{ __('sales.payment_method') }}</option>
+                                            <option value="1"
+                                                {{ $appTransaction->payment_method_id == 1 ? 'selected' : '' }}>
+                                                Offline </option>
+                                            <option value="2"
+                                                {{ $appTransaction->payment_method_id == 2 ? 'selected' : '' }}> Online
+                                            </option>
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            {{ __('sales.payment_mode') }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="recurring" for="recurring"> {{ __('sales.recurring') }}</label>
+                                        <select class="form-control select2" name="recurring" id="recurring">
+                                            <option selected value="">{{ __('sales.select_recurring') }}
+                                            </option>
+                                            <option value="1 month">Monthly</option>
+                                            <option value="7 days"> Weekly</option>
+                                            <option value="14 days"> Bi Weekly</option>
+                                            <option value="1 day"> Everyday</option>
+                                            <option value="30 days"> Every 30 Days</option>
+                                            <option value="2 month"> Every 2 Month</option>
+                                            <option value="3 month"> Quarterly</option>
+                                            <option value="6 month"> Every 6 Month</option>
+                                            <option value="1 year"> Yearly</option>
+                                        </select>
+
+                                        <div class="invalid-feedback">
+                                            {{ __('sales.recurring_error') }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <label class="no_of_rotaion" for="no_of_rotaion">
+                                            {{ __('sales.no_of_rotaion') }}</label>
+                                        <select class="form-control select2" name="no_of_rotaion" id="no_of_rotaion">
+                                            <option selected value="">{{ __('sales.select_no_of_rotation') }}
+                                            </option>
+                                            @for ($i = 1; $i <= 100; $i++)
+                                                <option value="{{ $i }}">{{ $i }}
+                                                </option>
+                                            @endfor
+                                        </select>
+
+                                        <div class="invalid-feedback">
+                                            {{ __('sales.no_of_rotaion_error') }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="test">
+
+                    <div class="row mt-3">
+                        <div class="col-md-4 col-lg-4 col-6 mx-sm-auto ml-md-0">
+                            <input type="submit" id="submit" name="send" class="btn btn-primary"
+                                value="Submit">
+                            <a href="{{ route('accounts.transaction.index') }}"
+                                class="btn btn-secondary mx-1">Cancel</a>
+                        </div>
+                    </div>
+                    <!--end row-->
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
+    <!-- this is use toggle button -->
+    @push('scripts')
+        @php
+            if (!empty($appTransaction->customer_id)) {
+                $class = "'.customer'";
+                $checked = "'customRadio1'";
+            } elseif (!empty($appTransaction->invoice_id)) {
+                $class = "'.invoices'";
+                $checked = "'customRadio2'";
+            }elseif (!empty($appTransaction->order_id)) {
+                $class = "'.orders'";
+                $checked = "'customRadio3'";
+            }else{
+                $class = "'.test'";
+                $checked = "'test'";
+            }
+        @endphp
+        <script type="text/javascript" src="https://jeremyfagis.github.io/dropify/dist/js/dropify.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="https://jeremyfagis.github.io/dropify/dist/css/dropify.min.css">
+        <script>
+            $('.selectsearch').select2({
+                searchInputPlaceholder: 'Search options'
+            });
+
+            $('.dropify').dropify();
+            $('.select2').select2({});
+
+            $(function() {
+                $('.datepicker').datepicker({
+                    dateFormat: 'dd-mm-yy',
+                });
+
+            });
+
+            var radioButton = document.getElementById(@php echo $checked @endphp);
+            radioButton.checked = true;
+
+            $(@php echo $class @endphp).css("display", "block");
+
+            $("#customRadio1").click(function() {
+                $("#radioInput").val('customer');
+                $(".customer").css("display", "block");
+                $(".invoices").css("display", "none");
+                $(".orders").css("display", "none");
+            });
+            $("#customRadio2").click(function() {
+                 $("#radioInput").val('invoice');
+                $(".invoices").css("display", "block");
+                $(".orders").css("display", "none");
+                $(".customer").css("display", "none");
+            });
+            $("#customRadio3").click(function() {
+                 $("#radioInput").val('order');
+                $(".invoices").css("display", "none");
+                $(".customer").css("display", "none");
+                $(".orders").css("display", "block");
+            });
+
+            $(document).ready(function() { 
+                $('#transaction_type').on('change', function() { 
+                     var val = $(this).val(); 
+                    if ( val != 'expense') { 
+                        $('.CategoryDisplay').addClass('showCategory');
+                    } else { 
+                        $('.CategoryDisplay').removeClass('showCategory');
+                    }
+                });
+            });
+        </script>
+    @endpush
+</x-app-layout>

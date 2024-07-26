@@ -1,0 +1,19 @@
+{
+    "name": "ritesh/crm",
+    "description": "Customer Relatioship Management",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "riteshInvoidea",
+            "email": "94535025+riteshInvoidea@users.noreply.github.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "Modules\\CRM\\": "Modules/CRM/src/"
+        }
+    },
+    "require": {}
+}

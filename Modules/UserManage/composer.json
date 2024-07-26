@@ -1,0 +1,19 @@
+{
+    "name": "invoidea/usermanage",
+    "description": "user management",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "invoidea",
+            "email": "developer@invoidea.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "Modules\\UserManage\\": "Modules/UserManage/src/"
+        }
+    },
+    "require": {}
+}

@@ -1,0 +1,26 @@
+<!-- vendor css -->
+<link href="{{asset('lib/@fortawesome/fontawesome-free/css/all.min.css')}}" rel="stylesheet">
+<link href="{{asset('lib/ionicons/css/ionicons.min.css')}}" rel="stylesheet">
+<link href="{{asset('lib/jqvmap/jqvmap.min.css')}}" rel="stylesheet">
+
+<link href="{{asset('/lib/select2/css/select2.min.css')}}" rel="stylesheet">
+
+<!-- DashForge CSS -->
+<link rel="stylesheet" href="{{asset('asset/css/dashforge.css')}}">
+<link rel="stylesheet" href="{{asset('asset/css/dashforge.dashboard.css')}}">
+
+
+<!-- favicon -->
+<link rel="shortcut icon" href="assets/images/favicon.png" />
+{{-- toaster cdn --}}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.css"
+integrity="sha512-3pIirOrwegjM6erE5gPSwkUzO+3cTjpnV9lexlNZqvupR64iZBnOOTiiLPb9M36zpMScbmUNIcHUqKD47M719g=="
+crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+{{-- fafa Icon CDN --}}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+@stack('styles')
